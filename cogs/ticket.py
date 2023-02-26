@@ -83,9 +83,9 @@ class Ticket:
                 ),
                 component.author: discord.PermissionOverwrite(
                     read_message_history=True,
-                    send_messages=False,
-                    attach_files=False,
-                    add_reactions=False,
+                    send_messages=True,
+                    attach_files=True,
+                    add_reactions=True,
                     view_channel=True
                 ),
                 component.guild.default_role: discord.PermissionOverwrite(
