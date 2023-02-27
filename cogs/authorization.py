@@ -19,22 +19,22 @@ class Authorization:
         self.warning_color = int(parser.get("Color", "warning"), 16)
 
         self.already_ticket_opened = discord.Embed(
-            title="안내(Warning)",
+            title="안내",
             description="티켓이 이미 열려있습니다. 만일 티켓이 닫혀있는데, 해당 안내 문구가 나왔을 경우 디스코드 봇 관리자에게 문의해주세요.",
             color=self.warning_color
         )
         self.ticket_mode_not_found = discord.Embed(
-            title="에러(Error)",
+            title="에러",
             description="티켓을 생성하는 도중 에러가 발생하였습니다. 자세한 사항은 디스코드 개발자에게 문의해주시기 바랍니다.",
             color=self.error_color
         )
         self.ticket_close_not_found = discord.Embed(
-            title="안내(Warning)",
+            title="안내",
             description="닫으시려는 티켓을 찾을 수 없습니다.",
             color=self.warning_color
         )
         self.ticket_process = discord.Embed(
-            title="티켓(Ticket)",
+            title="티켓",
             description="정상적으로 티켓을 열었습니다. {ticket_channel} 를 참조해주세요.",
             color=self.color
         )
@@ -53,7 +53,7 @@ class Authorization:
 
     @interaction.listener()
     async def on_message(self, message: discord.Message):
-        if message.channel.id != 1078268575011307560 or message.author == self.client.user:
+        if message.channel.id != 1079386090433163394 or message.author == self.client.user:
             return
 
         if self.admin_role not in getattr(message.author, "roles", []):
@@ -80,8 +80,7 @@ class Authorization:
                     interaction.Button(
                         custom_id="authorization_button_1",
                         emoji=discord.PartialEmoji(name="\U0001F4E7"),
-                        style=2,
-                        disabled=True
+                        style=2
                     ),
                     interaction.Button(
                         custom_id="authorization_button_2",
