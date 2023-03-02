@@ -2,10 +2,9 @@ import datetime
 import os
 import random
 import re
-import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Optional
+from typing import Optional, Union
 
 import aiosmtplib
 import asyncio
@@ -43,6 +42,7 @@ class AuthorizationEmail:
             use_tls=True
         )
         self.is_smtp_session_connect = False
+        self.is_smtp_session_login = False
 
         self.email_not_found = discord.Embed(
             title="재학생 인증 실패",
@@ -54,10 +54,20 @@ class AuthorizationEmail:
             description="인증 코드를 조회할 수 없습니다. 관리자에게 문의해주세요.",
             color=self.error_color
         )
+        self.email_request_not_found = discord.Embed(
+            title="재학생 인증 실패",
+            description="재학생 인증 세션을 찾을 수 없습니다. 다시 시도해주세요.",
+            color=self.error_color
+        )
 
         self.email_request_timeout = discord.Embed(
             title="재학생 인증",
             description="1분 이내에 이메일 인증을 이미 진행했습니다. 잠시 후에 다시 시도해주세요.",
+            color=self.warning_color
+        )
+        self.email_refresh_timeout = discord.Embed(
+            title="재학생 인증",
+            description="인증 코드 재발송은 30초에 한 번씩 시도할 수 있습니다. 잠시만 기다려주세요.",
             color=self.warning_color
         )
         self.email_forbidden = discord.Embed(
@@ -98,6 +108,14 @@ class AuthorizationEmail:
                         "\U0001F4E7를 눌러 이메일 인증을 다시 받으실 수 있습니다.",
             color=self.color
         )
+        self.email_resent_success = discord.Embed(
+            title="재학생 인증",
+            description="{email_id}으로 재발송하였습니다. `받은 메일함`을 확인해주세요.\n"
+                        "이메일 인증코드를 확인하신 후, 아래의 \U0001F512 버튼을 눌러 인증코드를 입력해 재학생 인증을 진행하세요.\n\n"
+                        "\U000026A0 받은 메일함에 인증 코드가 오지 않는다면, 스팸 메일함을 확인해주세요.\n"
+                        "\U0001F4E7를 눌러 이메일 인증을 다시 받으실 수 있습니다.",
+            color=self.color
+        )
 
     async def smtp_session_connect(self):
         if self.is_smtp_session_connect:
@@ -109,10 +127,15 @@ class AuthorizationEmail:
     async def timeout_smtp_session_close(self):
         await asyncio.sleep(300)
         await self.smtp_session.quit()
+        self.is_smtp_session_login = False
         self.is_smtp_session_connect = False
 
     @interaction.detect_component()
     async def authorization_button_1(self, component: interaction.ComponentsContext):
+        if self.member_role in component.author.roles:
+            await component.send("이미 재학생 인증을 받았습니다.", hidden=True)
+            return
+
         if component.author.id in self.email_verification_code:
             created_at = self.email_verification_code[component.author.id]["created_at"]
             last_created_total_second = abs((datetime.datetime.now() - created_at).total_seconds())
@@ -139,6 +162,96 @@ class AuthorizationEmail:
         )
         return
 
+    async def _send_email(
+            self,
+            context: Union[interaction.ModalContext, interaction.ComponentsContext],
+            email_id: str,
+            refresh: bool = False
+    ) -> Optional[str]:
+        with open(os.path.join(directory, "assets", "verification.html"), mode='r', encoding='utf8') as file:
+            tmpl1 = Template(file.read())
+        with open(os.path.join(directory, "assets", "verification.txt"), mode='r', encoding='utf8') as file:
+            tmpl2 = Template(file.read())
+
+        await self.smtp_session_connect()
+        if not self.is_smtp_session_login:
+            await self.smtp_session.login(self.smtp_id, self.smtp_password)
+            self.is_smtp_session_login = True
+
+        authorization_code = str(random.randint(0, 999999)).zfill(6)
+
+        message = MIMEMultipart()
+        message['Subject'] = "재학생 인증 코드: {authorization_code}".format(authorization_code=authorization_code)
+        message['From'] = self.smtp_id + "@gmail.com"
+        message['To'] = email_id
+
+        part1 = MIMEText(tmpl1.render(
+            verification_code=authorization_code,
+            author=f'{context.author.name}#{context.author.discriminator}'
+        ), 'html')
+        part2 = MIMEText(tmpl2.render(verification_code=authorization_code), 'plain')
+
+        message.attach(part1)
+        message.attach(part2)
+        try:
+            await self.smtp_session.send_message(message)
+        except ValueError:
+            self.email_value_exception.description = self.email_value_exception.description.format(
+                email_id=email_id
+            )
+            await context.edit(embed=self.email_value_exception)
+            return
+        except aiosmtplib.SMTPResponseException:
+            self.email_response_exception.description = self.email_response_exception.description.format(
+                email_id=email_id
+            )
+            await context.edit(embed=self.email_response_exception)
+            return
+        except aiosmtplib.SMTPRecipientsRefused:
+            self.email_recipients_refused.description = self.email_recipients_refused.description.format(
+                email_id=email_id
+            )
+            await context.edit(embed=self.email_recipients_refused)
+            return
+
+        if context.author.id not in self.email_verification_code:
+            self.email_verification_code[context.author.id] = {
+                "verification_code": authorization_code,
+                "email_id": email_id,
+                "created_at": datetime.datetime.now(),
+                "last_sent": datetime.datetime.now(),
+                "failed_count": 0
+            }
+        else:
+            self.email_verification_code[context.author.id]["last_sent"] = datetime.datetime.now()
+            self.email_verification_code[context.author.id]["verification_code"] = authorization_code
+
+        if refresh:
+            self.email_resent_success.description = self.email_resent_success.description.format(email_id=email_id)
+            embed = self.email_resent_success
+        else:
+            self.email_success.description = self.email_success.description.format(email_id=email_id)
+            embed = self.email_success
+
+        await context.edit(
+            embed=embed,
+            components=[
+                interaction.ActionRow(components=[
+                    interaction.Button(
+                        custom_id="email_verification_button",
+                        emoji=discord.PartialEmoji(name="\U0001F512"),
+                        style=2
+                    ),
+                    interaction.Button(
+                        custom_id="refresh_verification_button",
+                        emoji=discord.PartialEmoji(name="\U0001F4E7"),
+                        style=2
+                    )
+                ])
+            ]
+        )
+        return authorization_code
+
     @interaction.listener()
     async def on_modal(self, context: interaction.ModalContext):
         if context.custom_id == "email_authorization_request":
@@ -157,77 +270,7 @@ class AuthorizationEmail:
                 await context.edit(embed=self.email_forbidden)
                 return
 
-            with open(os.path.join(directory, "assets", "verification.html"), mode='r', encoding='utf8') as file:
-                tmpl1 = Template(file.read())
-            with open(os.path.join(directory, "assets", "verification.txt"), mode='r', encoding='utf8') as file:
-                tmpl2 = Template(file.read())
-
-            await self.smtp_session_connect()
-            await self.smtp_session.login(self.smtp_id, self.smtp_password)
-
-            authorization_code = str(random.randint(0, 999999)).zfill(6)
-
-            message = MIMEMultipart()
-            message['Subject'] = "재학생 인증 코드: {authorization_code}".format(authorization_code=authorization_code)
-            message['From'] = self.smtp_id + "@gmail.com"
-            message['To'] = email_id
-
-            part1 = MIMEText(tmpl1.render(
-                verification_code=authorization_code,
-                author=f'{context.author.name}#{context.author.discriminator}'
-            ), 'html')
-            part2 = MIMEText(tmpl2.render(verification_code=authorization_code), 'plain')
-
-            self.email_success.description = self.email_success.description.format(email_id=email_id)
-
-            message.attach(part1)
-            message.attach(part2)
-            try:
-                await self.smtp_session.send_message(message)
-            except ValueError:
-                self.email_value_exception.description = self.email_value_exception.description.format(
-                    email_id=email_id
-                )
-                await context.edit(embed=self.email_value_exception)
-                return
-            except aiosmtplib.SMTPResponseException:
-                self.email_response_exception.description = self.email_response_exception.description.format(
-                    email_id=email_id
-                )
-                await context.edit(embed=self.email_response_exception)
-                return
-            except aiosmtplib.SMTPRecipientsRefused:
-                self.email_recipients_refused.description = self.email_recipients_refused.description.format(
-                    email_id=email_id
-                )
-                await context.edit(embed=self.email_recipients_refused)
-                return
-            context_response_message = await context.edit(
-                embed=self.email_success,
-                components=[
-                    interaction.ActionRow(components=[
-                        interaction.Button(
-                            custom_id="email_verification_button",
-                            emoji=discord.PartialEmoji(name="\U0001F512"),
-                            style=2
-                        )
-                    ]),
-                    interaction.ActionRow(components=[
-                        interaction.Button(
-                            custom_id="refresh_verification_button",
-                            emoji=discord.PartialEmoji(name="\U0001F4E7"),
-                            style=2
-                        )
-                    ])
-                ]
-            )
-            self.email_verification_code[context.author.id] = {
-                "verification_code": authorization_code,
-                "email_id": email_id,
-                "created_at": datetime.datetime.now(),
-                "last_sent": datetime.datetime.now(),
-                "failed_count": 0
-            }
+            await self._send_email(context, email_id)
         elif context.custom_id == "email_authorization_response":
             for component in context.components:
                 if component.custom_id == "verification_code":
@@ -240,19 +283,42 @@ class AuthorizationEmail:
             data = self.email_verification_code.get(context.author.id)
             if data["verification_code"] == verification_code:
                 self.email_verification_code.pop(context.author.id)
-                await context.send("재학생 인증이 완료되었습니다. 역할을 부여합니다.")
-                await context.author.add_roles(self.member_role, reason=f"{data['email_id']} 학생증 인증 성공, 역할 자동 부여")
+                await context.send("재학생 인증이 완료되었습니다. 역할을 부여합니다.", hidden=True)
+                self.client.dispatch(
+                    'grant_permission_author',
+                    author=context.author,
+                    reason=f"{data['email_id']} 학생증 인증 성공, 역할 자동 부여"
+                )
                 return
             else:
-                if self.email_verification_code[context.author.id]['failed_count'] > 3:
-                    await context.send(embed=self.too_many_bad_verification_code)
+                if self.email_verification_code[context.author.id]['failed_count'] >= 3:
+                    await context.send(embed=self.too_many_bad_verification_code, hidden=True)
+                    self.email_verification_code.pop(context.author.id)
                     return
-                await context.send(embed=self.bad_verification_code)
                 self.email_verification_code[context.author.id]['failed_count'] += 1
+                await context.send(embed=self.bad_verification_code, hidden=True)
+        return
+
+    @interaction.detect_component()
+    async def refresh_verification_button(self, component: interaction.ComponentsContext):
+        if component.author.id not in self.email_verification_code:
+            await component.send(embed=self.email_request_not_found, hidden=True)
+            return
+
+        last_sent_delta = datetime.datetime.now() - self.email_verification_code[component.author.id]['last_sent']
+        if last_sent_delta.total_seconds() < 30:
+            await component.send(embed=self.email_refresh_timeout, hidden=True)
+            return
+        email_id = self.email_verification_code[component.author.id]['email_id']
+        await component.defer(hidden=True)
+        await self._send_email(component, email_id, True)
         return
 
     @interaction.detect_component()
     async def email_verification_button(self, component: interaction.ComponentsContext):
+        if component.author.id not in self.email_verification_code:
+            await component.send(embed=self.email_request_not_found, hidden=True)
+            return
         await component.modal(
             custom_id="email_authorization_response",
             components=[

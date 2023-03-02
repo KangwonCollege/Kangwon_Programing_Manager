@@ -52,6 +52,11 @@ class Authorization:
         )
 
     @interaction.listener()
+    async def on_grant_permission_author(self, author: discord.Member, reason: str = None):
+        await author.add_roles(self.member_role, reason=reason)
+        return
+
+    @interaction.listener()
     async def on_message(self, message: discord.Message):
         if message.channel.id != 1079386090433163394 or message.author == self.client.user:
             return
@@ -160,7 +165,7 @@ class Authorization:
         for ticket_member_info_event in self.client.extra_events.get('on_ticket_member_info', []):
             author: Optional[discord.Member] = await ticket_member_info_event(component=component, ticket_id='authorization')
             if author is not None:
-                await author.add_roles(self.member_role, reason="학생증 인증 성공, 역할 수동 부여")
+                await self.on_grant_permission_author(author, reason="학생증 인증 성공, 역할 수동 부여")
                 break
         else:
             # 사용자를 찾지 못해 역할을 부여하지 못할 경우
