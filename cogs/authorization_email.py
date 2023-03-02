@@ -24,8 +24,6 @@ class AuthorizationEmail:
     def __init__(self, client: interaction.Client):
         self.client = client
         self.guild: Optional[discord.Guild] = None
-        self.admin_role: Optional[discord.Role] = None
-        self.member_role: Optional[discord.Role] = None
 
         self.color = int(parser.get("Color", "default"), 16)
         self.error_color = int(parser.get("Color", "error"), 16)
@@ -134,7 +132,7 @@ class AuthorizationEmail:
 
     @interaction.detect_component()
     async def authorization_button_1(self, component: interaction.ComponentsContext):
-        if self.member_role in component.author.roles:
+        if parser.getint('DEFAULT', 'member_role_id') in [x.id for x in component.author.roles]:
             await component.send("이미 재학생 인증을 받았습니다.", hidden=True)
             return
 
