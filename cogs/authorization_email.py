@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import random
 import re
@@ -16,6 +17,7 @@ from config.config import get_config
 from utils.directory import directory
 
 parser = get_config()
+logger = logging.getLogger(__name__)
 
 
 class AuthorizationEmail:
@@ -222,9 +224,11 @@ class AuthorizationEmail:
                 "last_sent": datetime.datetime.now(),
                 "failed_count": 0
             }
+            logging.info("이메일 발송: {} / 인증 코드: {}".format(email_id, authorization_code))
         else:
             self.email_verification_code[context.author.id]["last_sent"] = datetime.datetime.now()
             self.email_verification_code[context.author.id]["verification_code"] = authorization_code
+            logging.info("이메일 재발송: {} / 인증 코드: {}".format(email_id, authorization_code))
 
         if refresh:
             self.email_resent_success.description = self.email_resent_success.description.format(email_id=email_id)
@@ -281,6 +285,9 @@ class AuthorizationEmail:
                 return
 
             data = self.email_verification_code.get(context.author.id)
+            logging.info("{} 인증 시도(시도/정답): {}/{}".format(
+                data["email_id"], data["verification_code"], verification_code
+            ))
             if data["verification_code"] == verification_code:
                 self.email_verification_code.pop(context.author.id)
                 await context.send("재학생 인증이 완료되었습니다. 역할을 부여합니다.", hidden=True)
