@@ -333,7 +333,9 @@ class AuthorizationEmail:
                         placeholder="012345",
                         style=1,
                         required=True,
-                        label="인증 코드"
+                        label="인증 코드",
+                        min_length=6,
+                        max_length=6
                     )
                 ])
             ],
