@@ -11,7 +11,7 @@ from utils.weekday import weekday
 
 
 class DormitoryMeal(BaseMeal):
-    def __init__(self, loop: asyncio.BaseEventLoop):
+    def __init__(self, loop: asyncio.AbstractEventLoop):
         super(DormitoryMeal, self).__init__(
             loop, connector=aiohttp.TCPConnector(ssl=False)
         )

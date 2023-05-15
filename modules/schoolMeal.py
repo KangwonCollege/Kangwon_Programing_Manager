@@ -10,7 +10,7 @@ from utils.weekday import weekday
 
 
 class SchoolMeal(BaseMeal):
-    def __init__(self, loop: asyncio.BaseEventLoop):
+    def __init__(self, loop: asyncio.AbstractEventLoop):
         super(SchoolMeal, self).__init__(loop)
 
         self.data: dict[
