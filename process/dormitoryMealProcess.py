@@ -3,9 +3,12 @@ import datetime
 import discord
 from discord.ext import interaction
 
+from config.config import get_config
 from modules.dormitoryMeal import DormitoryMeal
 from modules.schoolMeal import SchoolMeal
 from process.processBase import ProcessBase
+
+parser = get_config()
 
 
 class DormitoryMealProcess(ProcessBase):
@@ -18,6 +21,10 @@ class DormitoryMealProcess(ProcessBase):
     ):
         self.context = ctx
         self.client = client
+
+        self.color = int(parser.get("Color", "default"), 16)
+        self.error_color = int(parser.get("Color", "error"), 16)
+        self.warning_color = int(parser.get("Color", "warning"), 16)
 
         self.dormitory_client = dormitory_client
         if self.dormitory_client is None:
@@ -37,5 +44,9 @@ class DormitoryMealProcess(ProcessBase):
 
     async def content(self, date: datetime.date):
         data = await self.dormitory_client.meal(date)
-        embed = discord.Embed()
+        mbed = discord.Embed(
+            title="\U0001F371 기숙사 급식",
+            description=f"{date}일자, 새롬관 식단표 입니다.",
+            color=self.color,
+        )
         return
