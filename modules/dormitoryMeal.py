@@ -1,5 +1,5 @@
 import datetime
-
+import aiohttp
 import asyncio
 from bs4 import BeautifulSoup
 
@@ -12,7 +12,9 @@ from utils.weekday import weekday
 
 class DormitoryMeal(BaseMeal):
     def __init__(self, loop: asyncio.BaseEventLoop):
-        super(DormitoryMeal, self).__init__(loop)
+        super(DormitoryMeal, self).__init__(
+            loop, connector=aiohttp.TCPConnector(ssl=False)
+        )
 
         self.data: dict[datetime.date, DormitoryResponse | None] = dict()
 
@@ -66,7 +68,7 @@ class DormitoryMeal(BaseMeal):
                 }
             )
         soup = BeautifulSoup(response.data, 'html.parser')
-        body = soup.find("form", {"class": "fm"}).find("div", {"class": "tab-content"})
+        body = soup.find("form", {"id": "fm"}).find("div", {"class": "tab-content"})
 
         dormitory_type = {
             "general": "latest01",  # 재정생활관
@@ -74,12 +76,20 @@ class DormitoryMeal(BaseMeal):
             "BTL2": "latest03"  # 이롬관(제2 BTL 기숙사)
         }
         for index, (key, value) in enumerate(dormitory_type.items()):
-            dormitory_body = body.find("div", {"class": "tab-pane", "id": value})
+            dormitory_body = body.find("div", {"class": "tab-pane", "id": value}).find_all("table", {"class": "table"})[1]
             meal = dormitory_body.find_all("tr")  # 1번(월요일) ~ 7번(일요일)
-            for j, meal_info in enumerate(meal):
+            for j, meal_info in enumerate(meal[1:]):
                 meal_date = weekday_response.Monday + datetime.timedelta(days=j)
-                if self.data not in meal_date:
+                if meal_date not in self.data:
                     self.data[meal_date] = DormitoryResponse()
-                else:
-                    setattr(self.data[meal_date], key, meal_info.text)
+
+                for k, meal_type in enumerate(['breakfast', 'lunch', 'dinner']):
+                    meal_info_day = meal_info.find_all('td')[k]
+                    meal_info_day_and_type = meal_info_day.text.replace('\t', '')
+
+                    meal_info_day_and_type = meal_info_day_and_type.strip('\n')
+                    setattr(
+                        getattr(self.data[meal_date], key),
+                        meal_type, meal_info_day_and_type.split('\n')
+                    )
         return self.data

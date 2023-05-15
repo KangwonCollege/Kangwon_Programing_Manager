@@ -16,13 +16,15 @@ class Requests:
         loop: asyncio.AbstractEventLoop = None,
         session: aiohttp.ClientSession = None,
         e404: Type[NotFound] = None,
-        e500: Type[InternalServerError] = None
+        e500: Type[InternalServerError] = None,
+        **kwargs
     ):
         self.loop = loop or asyncio.get_event_loop()
         self.session = session
 
         self.e404 = e404 or NotFound
         self.e500 = e500 or InternalServerError
+        self.session_option = kwargs
 
     @staticmethod
     async def divide_content(resp):
@@ -47,7 +49,7 @@ class Requests:
 
         if session is None:
             single_session = True
-            session = aiohttp.ClientSession(loop=self.loop)
+            session = aiohttp.ClientSession(loop=self.loop, **self.session_option)
 
         async with session.request(method, url, **kwargs) as response:
             data = await self.divide_content(response)
@@ -65,7 +67,7 @@ class Requests:
                     raise self.e404(response.status, data)
                 elif request_data.status == 500:
                     raise self.e500(response.status, data)
-                else:
+                elif request_data.status >= 300:
                     raise HttpException(response.status, data)
 
         if single_session:

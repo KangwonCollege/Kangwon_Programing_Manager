@@ -65,8 +65,7 @@ class SchoolMeal(BaseMeal):
                 restaurant_name_tag = value.find('th', {"scope": "rowgroup"})
                 restaurant_name = restaurant_name_tag.text
                 restaurant_name_max_key = index + int(restaurant_name_tag.get("rowspan", 1))
-
-            meal_type = value.find('th', {"scope": "row"}).text
+            meal_type = value.find('th', {"rowspan": None}).text
             for j, meal_info in enumerate(tbody.find_all("td")):
                 meal_date = weekday_response.Monday + datetime.timedelta(days=j)
                 if meal_date not in self.data[building]:
