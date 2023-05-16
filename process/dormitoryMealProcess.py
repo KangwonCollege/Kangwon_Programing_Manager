@@ -39,7 +39,7 @@ class DormitoryMealProcess(ProcessBase):
             attachments: list[discord.File] = discord.utils.MISSING,
             **kwargs
     ) -> interaction.ComponentsContext | None:
-        await super(DormitoryMeal, self).response_component(component_context, content, embeds, attachments, **kwargs)
+        await super(DormitoryMealProcess, self).response_component(component_context, content, embeds, attachments, **kwargs)
         return
 
     async def content(self, date: datetime.date):

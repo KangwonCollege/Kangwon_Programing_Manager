@@ -52,6 +52,26 @@ class SchoolMeal(BaseMeal):
             br.replace_with("\n")
 
         body = soup.find("main", {"class": "colgroup"}).find("div", {"id": "contents"})
+
+        # Warning: This restaurant list was compiled as of the 2023 school year.
+        # These name may be changed.
+        restaurant_name_list = {
+            SchoolMealType.CheonJi: ["한식", "양식", "스넥", "멀티샵(2~3종)랜덤/간식", "특식(랜덤)"],
+            SchoolMealType.BaekNok: ["백록한라산", "THE진국", "양식", "스넥", "한그릇/한그릇 플러스", "백록정식"],
+            SchoolMealType.Duri: ["크누정식", "뚝배기정식", "돈가스&파스타", "우동", "크누석식"]
+        }
+
+        # School Meal Information does not exist.
+        if body.find('div', {"class": "over_scroll_table"}) is None:
+
+            for index in range(7):
+                meal_date = weekday_response.Monday + datetime.timedelta(days=index)
+                self.data[building][meal_date] = {
+                    restaurant_name: MealResponse()
+                    for restaurant_name in restaurant_name_list.items()
+                }
+            return self.data
+
         table = body.find('div', {"class": "over_scroll_table"}).find('table')
         tbody = table.find('tbody')
 
@@ -80,4 +100,10 @@ class SchoolMeal(BaseMeal):
                     self.data[building][meal_date][restaurant_name].lunch = meal_info.text.split('\n')
                 elif meal_type == "저녁":
                     self.data[building][meal_date][restaurant_name].dinner = meal_info.text.split('\n')
-                
+
+        for index in range(2):
+            meal_date = weekday_response.Sunday + datetime.timedelta(days=-(1 - index))
+            self.data[building][meal_date] = {
+                restaurant_name: MealResponse()
+                for restaurant_name in restaurant_name_list.items()
+            }
