@@ -24,24 +24,29 @@ class ResponseBase(metaclass=ABCMeta):
         content: str = discord.utils.MISSING,
         embeds: list[discord.Embed] = None,
         attachments: list[discord.File] = discord.utils.MISSING,
+        components: list[interaction.ActionRow] = None,
         **kwargs
     ) -> interaction.ComponentsContext | None:
         if embeds is None:
             embeds = []
+
+        _components = [self.buttons]
+        if components is not None:
+            _components += components
 
         if component_context is None:
             message = await self.context.edit(
                 content=content,
                 embeds=embeds,
                 attachments=attachments,
-                components=[self.buttons],
+                components=_components,
             )
         else:
             message = await component_context.edit(
                 content=content,
                 embeds=embeds,
                 attachments=attachments,
-                components=[self.buttons],
+                components=_components,
             )
 
         try:
@@ -58,7 +63,7 @@ class ResponseBase(metaclass=ABCMeta):
             )
         except asyncio.TimeoutError:
             await self.cancel_component(
-                component_context, content=content, embeds=embeds, **kwargs
+                component_context, content=content, embeds=embeds, components=components, **kwargs
             )
             return
 
@@ -76,19 +81,22 @@ class ResponseBase(metaclass=ABCMeta):
         content: str = None,
         embeds: list[discord.Embed] = discord.utils.MISSING,
         attachments: list[discord.File] = discord.utils.MISSING,
+        components: list[interaction.ActionRow] = None,
         **kwargs
     ):
-        component = copy.copy(self.buttons)
+        _components = [copy.copy(self.buttons)]
         for index, _ in enumerate(self.buttons.components):
-            component.components[index].disabled = True
-            component.components[index].style = 2
+            _components[0].components[index].disabled = True
+            _components[0].components[index].style = 2
+        if components is not None:
+            _components += components
 
         if component_context is not None:
             await component_context.edit(
                 content=content,
                 embeds=embeds,
                 attachments=attachments,
-                components=[component],
+                components=_components,
                 **kwargs
             )
         else:
@@ -96,7 +104,7 @@ class ResponseBase(metaclass=ABCMeta):
                 content=content,
                 embeds=embeds,
                 attachments=attachments,
-                components=[component],
+                components=_components,
                 **kwargs
             )
         return

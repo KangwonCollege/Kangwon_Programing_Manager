@@ -3,9 +3,9 @@ import datetime
 import asyncio
 from bs4 import BeautifulSoup
 
-from modules.baseMeal import BaseMeal
-from modules.mealResponse import MealResponse
-from modules.schoolMealType import SchoolMealType
+from modules.meal.baseMeal import BaseMeal
+from modules.meal.mealResponse import MealResponse
+from modules.meal.schoolMealType import SchoolMealType
 from utils.weekday import weekday
 
 

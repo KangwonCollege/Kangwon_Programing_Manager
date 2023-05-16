@@ -1,8 +1,11 @@
+import datetime
+
 import discord
 from discord.ext import interaction
 from typing import Optional
 
 from config.config import get_config
+from process.dormitoryMealProcess import DormitoryMealProcess
 
 parser = get_config()
 
@@ -22,10 +25,12 @@ class Meal:
 
     @interaction.command(name="긱식")
     @interaction.option(name="건물", choices=[
-        interaction.CommandOptionChoice("새롬관", "CC10"),
-        interaction.CommandOptionChoice("이롬관", "CC20"),
+        interaction.CommandOptionChoice("새롬관", "새롬관"),
+        interaction.CommandOptionChoice("이롬관", "이롬관"),
     ])
     async def dormitory_meal(self, ctx: interaction.ApplicationContext, building: str):
+        client = DormitoryMealProcess(ctx, self.client)
+        await client.content(datetime.date.today(), building)
         return
 
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from modules.mealResponse import MealResponse
+from modules.meal.mealResponse import MealResponse
 
 
 class DormitoryResponse(BaseModel):

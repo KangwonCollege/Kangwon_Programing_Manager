@@ -3,8 +3,8 @@ import aiohttp
 import asyncio
 from bs4 import BeautifulSoup
 
-from modules.baseMeal import BaseMeal
-from modules.dormitoryResponse import DormitoryResponse
+from modules.meal.baseMeal import BaseMeal
+from modules.meal.dormitoryResponse import DormitoryResponse
 
 from utils.dict_to_form import dict_to_form
 from utils.weekday import weekday

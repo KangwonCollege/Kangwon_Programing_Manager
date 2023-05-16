@@ -37,7 +37,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
             emoji=discord.PartialEmoji(name="\U0001F307"),
             style=1,
         )
-        self.dinner_button = interaction.Button(
+        self.lunch_button = interaction.Button(
             custom_id="lunch_button",
             emoji=discord.PartialEmoji(name="\U0001F3D9"),
             style=1,
