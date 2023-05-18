@@ -51,24 +51,6 @@ class DormitoryMealProcess(ProcessBase):
                 }) for week_key, meal_type_info in value.items() if meal_type_info is not None
             })
 
-    async def response_component(
-            self,
-            component_context: interaction.ComponentsContext | None = None,
-            content: str = discord.utils.MISSING,
-            embeds: list[discord.Embed] = None,
-            attachments: list[discord.File] = discord.utils.MISSING,
-            components: list[interaction.ActionRow] = None,
-            **kwargs
-    ) -> interaction.ComponentsContext | None:
-        return await super(DormitoryMealProcess, self).response_component(
-            component_context,
-            content,
-            embeds, 
-            attachments, 
-            components, 
-            **kwargs
-        )
-
     async def content(
             self,
             date: datetime.date,
@@ -94,9 +76,12 @@ class DormitoryMealProcess(ProcessBase):
         embed.add_field(name="저녁", value="\n".join(meal_info.dinner), inline=True)
 
         self.init_button()
+        self.breakfast_button.style = 2
         self.breakfast_button.disabled = True
+        self.breakfast_button.style = 2
         self.lunch_button.disabled = True
-        self.dinner_button .disabled = True
+        self.breakfast_button.style = 2
+        self.dinner_button.disabled = True
 
         meal_time_parent = self.meal_time[dormitory_types[building]]
         weekday_response = weekday(date)
