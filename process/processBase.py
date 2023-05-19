@@ -159,12 +159,13 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
             **kwargs
     ):
         if component.custom_id == self.building_selection and component.type == interaction.Selection:
-            return await self.content(
-                date=date,
-                building=building,
-                component_context=component_context,
-                **kwargs
-            )
+            if component.values[0] in ["새롬관", "이룸관"]:
+                return await self.content(
+                    date=date,
+                    building=building,
+                    component_context=component_context,
+                    **kwargs
+                )
 
         if component.custom_id == self.left_button.custom_id:
             return await self.content(

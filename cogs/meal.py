@@ -26,7 +26,7 @@ class Meal:
     @interaction.command(name="긱식")
     @interaction.option(name="건물", choices=[
         interaction.CommandOptionChoice("새롬관", "새롬관"),
-        interaction.CommandOptionChoice("이롬관", "이롬관"),
+        interaction.CommandOptionChoice("이룸관", "이룸관"),
     ])
     async def dormitory_meal(self, ctx: interaction.ApplicationContext, building: str):
         client = DormitoryMealProcess(ctx, self.client)

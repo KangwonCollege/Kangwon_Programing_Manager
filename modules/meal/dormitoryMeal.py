@@ -73,7 +73,7 @@ class DormitoryMeal(BaseMeal):
         dormitory_type = {
             "general": "latest01",  # 재정생활관
             "BTL1": "latest02",  # 새롬관(제1 BTL 기숙사)
-            "BTL2": "latest03"  # 이롬관(제2 BTL 기숙사)
+            "BTL2": "latest03"  # 이룸관(제2 BTL 기숙사)
         }
         for index, (key, value) in enumerate(dormitory_type.items()):
             dormitory_body = body.find("div", {"class": "tab-pane", "id": value}).find_all("table", {"class": "table"})[1]

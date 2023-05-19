@@ -47,7 +47,7 @@ class DormitoryMealProcess(ProcessBase):
         data = await self.dormitory_client.meal(date)
         dormitory_types = {
             "새롬관": "BTL1",
-            "이롬관": "BTL2"
+            "이룸관": "BTL2"
         }
         meal_info = getattr(data, dormitory_types[building], MealResponse())
 
