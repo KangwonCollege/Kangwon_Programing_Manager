@@ -1,18 +1,12 @@
 import datetime
 import discord
-import json
-import os
 from discord.ext import interaction
 
 from config.config import get_config
 from modules.meal.dormitoryMeal import DormitoryMeal
 from modules.meal.schoolMeal import SchoolMeal
 from modules.meal.mealResponse import MealResponse
-from modules.mealTimeModel import Week
-from modules.mealTimeModel import OperatingTime
-from modules.mealTimeModel import MealType
 from process.processBase import ProcessBase
-from utils.directory import directory
 from utils.weekday import weekday
 
 parser = get_config()
@@ -25,8 +19,16 @@ class DormitoryMealProcess(ProcessBase):
             client: interaction.Client,
             dormitory_client: DormitoryMeal = None,
             school_client: SchoolMeal = None,
+            **kwargs
     ):
-        super(DormitoryMealProcess, self).__init__(ctx, client)
+        super(DormitoryMealProcess, self).__init__(
+            ctx,
+            client,
+            dormitory_client,
+            school_client,
+            dormitory_process=self,
+            school_process=kwargs.get('school_process')
+        )
         self.context = ctx
         self.client = client
 
@@ -34,28 +36,12 @@ class DormitoryMealProcess(ProcessBase):
         self.error_color = int(parser.get("Color", "error"), 16)
         self.warning_color = int(parser.get("Color", "warning"), 16)
 
-        self.dormitory_client = dormitory_client
-        if self.dormitory_client is None:
-            self.dormitory_client = DormitoryMeal(loop=self.client.loop)
-        self.school_client = school_client
-
-        with open(os.path.join(directory, "data", "meal_time.json")) as file:
-            self.meal_time_json = json.load(file)
-
-        self.meal_time = dict()
-        for key, value in self.meal_time_json.items():
-            self.meal_time[key] = Week(**{
-                week_key: MealType(**{
-                    operating_key: OperatingTime(**operating_value)
-                    for operating_key, operating_value in meal_type_info.items() if operating_value is not None
-                }) for week_key, meal_type_info in value.items() if meal_type_info is not None
-            })
-
     async def content(
             self,
             date: datetime.date,
             building: str,
-            component_context: interaction.ComponentsContext = None
+            component_context: interaction.ComponentsContext = None,
+            **kwargs
     ):
         await self.context.defer()
         data = await self.dormitory_client.meal(date)
@@ -99,5 +85,5 @@ class DormitoryMealProcess(ProcessBase):
         elif datetime.datetime.now().time() < meal_time.dinner:
             self.dinner_button.style = 4
 
-        await self.response_component(component_context, embeds=[embed])
+        component = await self.request_component(component_context, embeds=[embed])
         return

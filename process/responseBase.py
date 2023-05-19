@@ -1,9 +1,11 @@
 import asyncio
 import copy
-import discord
+import json
+import os
 from abc import ABCMeta
 from abc import abstractmethod
 
+import discord
 from discord.ext import interaction
 
 
@@ -13,19 +15,26 @@ class ResponseBase(metaclass=ABCMeta):
         self.client = client
         self.init_button()
 
+    def check_component(self, original_message: discord.Message, component: interaction.ComponentsContext) -> bool:
+        return (
+                component.custom_id
+                and component.message.id == original_message.id
+                and component.channel.id == self.context.channel.id
+        )
+
     @abstractmethod
     def init_button(self):
         pass
 
     @abstractmethod
-    async def response_component(
-        self,
-        component_context: interaction.ComponentsContext | None = None,
-        content: str = discord.utils.MISSING,
-        embeds: list[discord.Embed] = None,
-        attachments: list[discord.File] = discord.utils.MISSING,
-        components: list[interaction.ActionRow] = None,
-        **kwargs
+    async def request_component(
+            self,
+            component_context: interaction.ComponentsContext | None = None,
+            content: str = discord.utils.MISSING,
+            embeds: list[discord.Embed] = None,
+            attachments: list[discord.File] = discord.utils.MISSING,
+            components: list[interaction.ActionRow] = None,
+            **kwargs
     ) -> interaction.ComponentsContext | None:
         if embeds is None:
             embeds = []
@@ -52,12 +61,7 @@ class ResponseBase(metaclass=ABCMeta):
         try:
             context: interaction.ComponentsContext = (
                 await self.client.wait_for_global_component(
-                    check=(
-                        lambda x: x.custom_id
-                        in [t.custom_id for t in self.buttons.components]
-                        and x.message.id == message.id
-                        and x.channel.id == self.context.channel.id
-                    ),
+                    check=lambda x: self.check_component(message, x),
                     timeout=300,
                 )
             )
@@ -76,13 +80,13 @@ class ResponseBase(metaclass=ABCMeta):
         pass
 
     async def cancel_component(
-        self,
-        component_context: interaction.ComponentsContext | None = None,
-        content: str = None,
-        embeds: list[discord.Embed] = discord.utils.MISSING,
-        attachments: list[discord.File] = discord.utils.MISSING,
-        components: list[interaction.ActionRow] = None,
-        **kwargs
+            self,
+            component_context: interaction.ComponentsContext | None = None,
+            content: str = None,
+            embeds: list[discord.Embed] = discord.utils.MISSING,
+            attachments: list[discord.File] = discord.utils.MISSING,
+            components: list[interaction.ActionRow] = None,
+            **kwargs
     ):
         _components = [copy.copy(self.buttons)]
         for index, _ in enumerate(self.buttons.components):
