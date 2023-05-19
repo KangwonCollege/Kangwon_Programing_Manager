@@ -64,8 +64,8 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
             interaction.Selection(
                 custom_id="building_selection",
                 options=[
-                    interaction.Options(label="새롬관", value="dormitory_btl1"),
-                    interaction.Options(label="이룸관", value="dormitory_btl2"),
+                    interaction.Options(label="새롬관", value="새롬관"),
+                    interaction.Options(label="이룸관", value="이룸관"),
                     interaction.Options(label="천지관", value=SchoolMealType.CheonJi.value),
                     interaction.Options(label="백록관", value=SchoolMealType.BaekNok.value),
                     interaction.Options(label="두리관", value=SchoolMealType.Duri.value),
@@ -76,8 +76,9 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
     def check_component(self, original_message: discord.Message, component: interaction.ComponentsContext) -> bool:
         return (
                 super().check_component(original_message, component) and
-                component.custom_id in [t.custom_id for t in
-                                        (self.buttons.components + self.building_selection.components)]
+                component.custom_id in [
+                    t.custom_id for t in (self.buttons.components + self.building_selection.components)
+                ]
         )
 
     async def request_component(
@@ -155,37 +156,50 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
             component: interaction.ComponentsContext,
             date: datetime.date,
             building: str,
-            component_context: interaction.ComponentsContext = None,
             **kwargs
     ):
-        if component.custom_id == self.building_selection and component.type == interaction.Selection:
+        if component.custom_id in [
+            x.custom_id for x in self.building_selection.components
+        ] and component.type == interaction.Selection.TYPE:
             if component.values[0] in ["새롬관", "이룸관"]:
-                return await self.content(
+                return await self.dormitory_process.content(
                     date=date,
-                    building=building,
-                    component_context=component_context,
+                    building=component.values[0],
+                    component_context=component,
                     **kwargs
                 )
+            elif component.values[0] in [
+                SchoolMealType.CheonJi.value,
+                SchoolMealType.BaekNok.value,
+                SchoolMealType.Duri.value
+            ]:
+                return await self.school_process.content(
+                    date=date,
+                    building=building,
+                    component_context=component,
+                    **kwargs
+                )
+            return
 
         if component.custom_id == self.left_button.custom_id:
             return await self.content(
                 date=(date + datetime.timedelta(days=-1)),
                 building=building,
-                component_context=component_context,
+                component_context=component,
                 **kwargs
             )
         elif component.custom_id == self.right_button.custom_id:
             return await self.content(
                 date=(date + datetime.timedelta(days=1)),
                 building=building,
-                component_context=component_context,
+                component_context=component,
                 **kwargs
             )
         elif component.custom_id == self.breakfast_button.custom_id:
             return await self.content(
                 date=date,
                 building=building,
-                component_context=component_context,
+                component_context=component,
                 meal_type="breakfast",
                 **kwargs
             )
@@ -193,7 +207,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
             return await self.content(
                 date=date,
                 building=building,
-                component_context=component_context,
+                component_context=component,
                 meal_type="lunch",
                 **kwargs
             )
@@ -201,7 +215,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
             return await self.content(
                 date=date,
                 building=building,
-                component_context=component_context,
+                component_context=component,
                 meal_type="dinner",
                 **kwargs
             )

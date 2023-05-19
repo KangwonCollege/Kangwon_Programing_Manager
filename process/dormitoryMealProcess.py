@@ -43,7 +43,6 @@ class DormitoryMealProcess(ProcessBase):
             component_context: interaction.ComponentsContext = None,
             **kwargs
     ):
-        await self.context.defer()
         data = await self.dormitory_client.meal(date)
         dormitory_types = {
             "새롬관": "BTL1",
@@ -78,12 +77,22 @@ class DormitoryMealProcess(ProcessBase):
         else:
             meal_time = meal_time_parent.weekday
 
-        if datetime.datetime.now().time() < meal_time.breakfast:
+        if datetime.datetime.now().time() < (
+                getattr(meal_time, "breakfast") if getattr(meal_time, "breakfast", None) is not None
+                else datetime.time()
+        ):
             self.breakfast_button.style = 4
-        elif datetime.datetime.now().time() < meal_time.lunch:
+        elif datetime.datetime.now().time() < (
+                getattr(meal_time, "lunch") if getattr(meal_time, "lunch", None) is not None
+                else datetime.time()
+        ):
             self.lunch_button.style = 4
-        elif datetime.datetime.now().time() < meal_time.dinner:
+        elif datetime.datetime.now().time() < (
+                getattr(meal_time, "dinner") if getattr(meal_time, "dinner", None) is not None
+                else datetime.time()
+        ):
             self.dinner_button.style = 4
 
         component = await self.request_component(component_context, embeds=[embed])
+        await self.response_component(component, date, building, **kwargs)
         return

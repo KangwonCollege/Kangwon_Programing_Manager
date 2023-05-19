@@ -29,6 +29,7 @@ class Meal:
         interaction.CommandOptionChoice("이룸관", "이룸관"),
     ])
     async def dormitory_meal(self, ctx: interaction.ApplicationContext, building: str):
+        await ctx.defer()
         client = DormitoryMealProcess(ctx, self.client)
         await client.content(datetime.date.today(), building)
         return
