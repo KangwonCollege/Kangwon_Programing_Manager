@@ -105,5 +105,5 @@ class SchoolMeal(BaseMeal):
             meal_date = weekday_response.Sunday + datetime.timedelta(days=-(1 - index))
             self.data[building][meal_date] = {
                 restaurant_name: MealResponse()
-                for restaurant_name in restaurant_name_list.items()
+                for restaurant_name in restaurant_name_list[building]
             }

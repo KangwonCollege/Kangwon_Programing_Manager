@@ -5,10 +5,11 @@ from abc import abstractmethod
 import discord
 from discord.ext import interaction
 
-from modules.meal import SchoolMealType
 from modules.meal.dormitoryMeal import DormitoryMeal
 from modules.meal.schoolMeal import SchoolMeal
+from modules.meal.schoolMealType import SchoolMealType
 from process.responseBase import ResponseBase
+from utils.find_enum import find_enum
 
 
 class ProcessBase(ResponseBase, metaclass=ABCMeta):
@@ -155,9 +156,10 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                 SchoolMealType.BaekNok.value,
                 SchoolMealType.Duri.value
             ]:
+                _building = find_enum(SchoolMealType, component.values[0])
                 return await self.school_process.content(
                     date=date,
-                    building=building,
+                    building=_building,
                     component_context=component,
                     **kwargs
                 )

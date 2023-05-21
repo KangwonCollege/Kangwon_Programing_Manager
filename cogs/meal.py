@@ -2,10 +2,10 @@ import datetime
 
 import discord
 from discord.ext import interaction
-from typing import Optional
 
 from config.config import get_config
 from process.dormitoryMealProcess import DormitoryMealProcess
+from process.schoolMealProcess import SchoolMealProcess
 
 parser = get_config()
 
@@ -30,8 +30,15 @@ class Meal:
     ])
     async def dormitory_meal(self, ctx: interaction.ApplicationContext, building: str):
         await ctx.defer()
-        client = DormitoryMealProcess(ctx, self.client)
-        await client.content(datetime.date.today(), building)
+        client = DormitoryMealProcess(
+            ctx=ctx,
+            client=self.client,
+            school_process=SchoolMealProcess(ctx, self.client)
+        )
+        await client.content(
+            date=datetime.date.today(),
+            building=building
+        )
         return
 
 

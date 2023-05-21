@@ -7,7 +7,6 @@ from config.config import get_config
 from modules.meal.dormitoryMeal import DormitoryMeal
 from modules.meal.mealResponse import MealResponse
 from modules.meal.schoolMeal import SchoolMeal
-from modules.meal.schoolMealType import SchoolMealType
 from process.mealTimeProcess import MealTimeProcess
 
 parser = get_config()
@@ -40,7 +39,7 @@ class DormitoryMealProcess(MealTimeProcess):
     async def content(
             self,
             date: datetime.date,
-            building: SchoolMealType,
+            building: str,
             component_context: interaction.ComponentsContext = None,
             **kwargs
     ):
@@ -57,8 +56,19 @@ class DormitoryMealProcess(MealTimeProcess):
             color=self.color,
         )
 
+        embed.add_field(name="아침", value="\n".join(meal_info.breakfast), inline=True)
+        embed.add_field(name="점심", value="\n".join(meal_info.lunch), inline=True)
+        embed.add_field(name="저녁", value="\n".join(meal_info.dinner), inline=True)
+
         self.init_button()
-        meal_time = self.meal_time_initialization(date, building.value())
+        self.breakfast_button.style = 2
+        self.breakfast_button.disabled = True
+        self.lunch_button.style = 2
+        self.lunch_button.disabled = True
+        self.dinner_button.style = 2
+        self.dinner_button.disabled = True
+
+        meal_time = self.meal_time_initialization(date, dormitory_types[building])
         self.meal_button(meal_time)
         embed.set_footer(text=self.meal_footer(meal_time))
 
