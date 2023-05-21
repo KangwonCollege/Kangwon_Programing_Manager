@@ -1,18 +1,19 @@
 import datetime
+
 import discord
 from discord.ext import interaction
 
 from config.config import get_config
 from modules.meal.dormitoryMeal import DormitoryMeal
-from modules.meal.schoolMeal import SchoolMeal
 from modules.meal.mealResponse import MealResponse
-from process.processBase import ProcessBase
-from utils.weekday import weekday
+from modules.meal.schoolMeal import SchoolMeal
+from modules.meal.schoolMealType import SchoolMealType
+from process.mealTimeProcess import MealTimeProcess
 
 parser = get_config()
 
 
-class DormitoryMealProcess(ProcessBase):
+class DormitoryMealProcess(MealTimeProcess):
     def __init__(
             self,
             ctx: interaction.ApplicationContext,
@@ -39,7 +40,7 @@ class DormitoryMealProcess(ProcessBase):
     async def content(
             self,
             date: datetime.date,
-            building: str,
+            building: SchoolMealType,
             component_context: interaction.ComponentsContext = None,
             **kwargs
     ):
@@ -56,42 +57,10 @@ class DormitoryMealProcess(ProcessBase):
             color=self.color,
         )
 
-        embed.add_field(name="아침", value="\n".join(meal_info.breakfast), inline=True)
-        embed.add_field(name="점심", value="\n".join(meal_info.lunch), inline=True)
-        embed.add_field(name="저녁", value="\n".join(meal_info.dinner), inline=True)
-
         self.init_button()
-        self.breakfast_button.style = 2
-        self.breakfast_button.disabled = True
-        self.breakfast_button.style = 2
-        self.lunch_button.disabled = True
-        self.breakfast_button.style = 2
-        self.dinner_button.disabled = True
-
-        meal_time_parent = self.meal_time[dormitory_types[building]]
-        weekday_response = weekday(date)
-        if weekday_response.Saturday == date:
-            meal_time = meal_time_parent.weekend_saturday
-        elif weekday_response.Sunday == date:
-            meal_time = meal_time_parent.weekend_sunday
-        else:
-            meal_time = meal_time_parent.weekday
-
-        if datetime.datetime.now().time() < (
-                getattr(meal_time, "breakfast") if getattr(meal_time, "breakfast", None) is not None
-                else datetime.time()
-        ):
-            self.breakfast_button.style = 4
-        elif datetime.datetime.now().time() < (
-                getattr(meal_time, "lunch") if getattr(meal_time, "lunch", None) is not None
-                else datetime.time()
-        ):
-            self.lunch_button.style = 4
-        elif datetime.datetime.now().time() < (
-                getattr(meal_time, "dinner") if getattr(meal_time, "dinner", None) is not None
-                else datetime.time()
-        ):
-            self.dinner_button.style = 4
+        meal_time = self.meal_time_initialization(date, building.value())
+        self.meal_button(meal_time)
+        embed.set_footer(text=self.meal_footer(meal_time))
 
         component = await self.request_component(component_context, embeds=[embed])
         await self.response_component(component, date, building, **kwargs)

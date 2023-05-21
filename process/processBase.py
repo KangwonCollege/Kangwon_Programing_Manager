@@ -4,17 +4,11 @@ from abc import abstractmethod
 
 import discord
 from discord.ext import interaction
-import os
-import json
 
 from modules.meal import SchoolMealType
-from process.responseBase import ResponseBase
 from modules.meal.dormitoryMeal import DormitoryMeal
 from modules.meal.schoolMeal import SchoolMeal
-from modules.mealTimeModel import Week
-from modules.mealTimeModel import OperatingTime
-from modules.mealTimeModel import MealType
-from utils.directory import directory
+from process.responseBase import ResponseBase
 
 
 class ProcessBase(ResponseBase, metaclass=ABCMeta):
@@ -42,18 +36,6 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
         self.school_client = school_client
         if self.school_client is None:
             self.school_client = SchoolMeal(loop=self.client.loop)
-
-        with open(os.path.join(directory, "data", "meal_time.json")) as file:
-            self.meal_time_json = json.load(file)
-
-        self.meal_time = dict()
-        for key, value in self.meal_time_json.items():
-            self.meal_time[key] = Week(**{
-                week_key: MealType(**{
-                    operating_key: OperatingTime(**operating_value)
-                    for operating_key, operating_value in meal_type_info.items() if operating_value is not None
-                }) for week_key, meal_type_info in value.items() if meal_type_info is not None
-            })
 
         self.dormitory_process = kwargs.get('dormitory_process')
         self.school_process = kwargs.get('school_process')
@@ -145,7 +127,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
     async def content(
             self,
             date: datetime.date,
-            building: str,
+            building: str | SchoolMealType,
             component_context: interaction.ComponentsContext = None,
             **kwargs
     ):
@@ -155,7 +137,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
             self,
             component: interaction.ComponentsContext,
             date: datetime.date,
-            building: str,
+            building: str | SchoolMealType,
             **kwargs
     ):
         if component.custom_id in [
