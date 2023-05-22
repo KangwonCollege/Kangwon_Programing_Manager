@@ -50,7 +50,7 @@ class SchoolMealProcess(MealTimeProcess):
 
         # if now_time < self.meal_time_safe(meal_time, "breakfast"):
         #     self.breakfast_button.style = 4
-        if meal_type is None:
+        if meal_type is None or self._optional_safe(meal_time, meal_type, None) is None:
             if now_time < self.meal_time_safe(meal_time, "lunch"):
                 meal_type = "lunch"
             elif now_time < self.meal_time_safe(meal_time, "dinner"):
@@ -102,6 +102,17 @@ class SchoolMealProcess(MealTimeProcess):
         self.meal_button(meal_time)
         embed.set_footer(text=self.meal_footer(meal_time))
 
+        # current button
+        if meal_type == 'breakfast':
+            self.breakfast_button.style = 3
+            self.breakfast_button.disabled = True
+        elif meal_type == 'lunch':
+            self.lunch_button.style = 3
+            self.lunch_button.disabled = True
+        elif meal_type == 'dinner':
+            self.dinner_button.style = 3
+            self.dinner_button.disabled = True
+
         component = await self.request_component(component_context, embeds=[embed])
-        await self.response_component(component, date, building, **kwargs)
+        await self.response_component(component, date, building, meal_type=meal_type, **kwargs)
         return

@@ -180,6 +180,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                 **kwargs
             )
         elif component.custom_id == self.breakfast_button.custom_id:
+            kwargs.pop('meal_type')
             return await self.content(
                 date=date,
                 building=building,
@@ -188,6 +189,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                 **kwargs
             )
         elif component.custom_id == self.lunch_button.custom_id:
+            kwargs.pop('meal_type')
             return await self.content(
                 date=date,
                 building=building,
@@ -196,6 +198,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                 **kwargs
             )
         elif component.custom_id == self.dinner_button.custom_id:
+            kwargs.pop('meal_type')
             return await self.content(
                 date=date,
                 building=building,
