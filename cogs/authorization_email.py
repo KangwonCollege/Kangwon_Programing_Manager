@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import re
+import copy
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Optional, Union
@@ -196,22 +197,25 @@ class AuthorizationEmail:
         try:
             await self.smtp_session.send_message(message)
         except ValueError:
-            self.email_value_exception.description = self.email_value_exception.description.format(
+            embed = copy.copy(self.email_value_exception)
+            embed.description = self.email_value_exception.description.format(
                 email_id=email_id
             )
-            await context.edit(embed=self.email_value_exception)
+            await context.edit(embed=embed)
             return
         except aiosmtplib.SMTPResponseException:
-            self.email_response_exception.description = self.email_response_exception.description.format(
+            embed = copy.copy(self.email_value_exception)
+            embed.description = self.email_response_exception.description.format(
                 email_id=email_id
             )
-            await context.edit(embed=self.email_response_exception)
+            await context.edit(embed=embed)
             return
         except aiosmtplib.SMTPRecipientsRefused:
-            self.email_recipients_refused.description = self.email_recipients_refused.description.format(
+            embed = copy.copy(self.email_value_exception)
+            embed.description = self.email_recipients_refused.description.format(
                 email_id=email_id
             )
-            await context.edit(embed=self.email_recipients_refused)
+            await context.edit(embed=embed)
             return
 
         if context.author.id not in self.email_verification_code:
@@ -229,11 +233,13 @@ class AuthorizationEmail:
             logging.info("이메일 재발송: {} / 인증 코드: {}".format(email_id, authorization_code))
 
         if refresh:
-            self.email_resent_success.description = self.email_resent_success.description.format(email_id=email_id)
-            embed = self.email_resent_success
+            # self.email_resent_success.description = self.email_resent_success.description.format(email_id=email_id)
+            embed = copy.copy(self.email_resent_success)
+            embed.description = self.email_resent_success.description.format(email_id=email_id)
         else:
-            self.email_success.description = self.email_success.description.format(email_id=email_id)
-            embed = self.email_success
+            # self.email_success.description = self.email_success.description.format(email_id=email_id)
+            embed = copy.copy(self.email_success)
+            embed.description = self.email_success.description.format(email_id=email_id)
 
         await context.edit(
             embed=embed,
