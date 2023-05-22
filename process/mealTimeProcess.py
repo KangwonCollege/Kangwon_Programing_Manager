@@ -99,18 +99,18 @@ class MealTimeProcess(ProcessBase, metaclass=ABCMeta):
             return "미운영"
         elif now_time <= self.meal_time_safe(meal_time, "breakfast"):  # meal.breakfast will not None
             return (
-                f"아침: {meal_time.breakfast.start_hours}시 {meal_time.breakfast.start_minutes}분"
-                f" ~ {meal_time.breakfast.end_hours}시 {meal_time.breakfast.end_minutes}분"
+                f"아침: {meal_time.breakfast.start_hours}시 {str(meal_time.breakfast.start_minutes).zfill(2)}분"
+                f" ~ {meal_time.breakfast.end_hours}시 {str(meal_time.breakfast.end_minutes).zfill(2)}분"
             )
         elif now_time <= self.meal_time_safe(meal_time, "lunch"):
             return (
-                f"점심: {meal_time.lunch.start_hours}시 {meal_time.lunch.start_minutes}분"
-                f" ~ {meal_time.lunch.end_hours}시 {meal_time.lunch.end_minutes}분"
+                f"점심: {meal_time.lunch.start_hours}시 {str(meal_time.lunch.start_minutes).zfill(2)}분"
+                f" ~ {meal_time.lunch.end_hours}시 {str(meal_time.lunch.end_minutes).zfill(2)}분"
             )
         elif now_time <= self.meal_time_safe(meal_time, "dinner"):
             return (
-                f"점심: {meal_time.dinner.start_hours}시 {meal_time.dinner.start_minutes}분"
-                f" ~ {meal_time.dinner.end_hours}시 {meal_time.dinner.end_minutes}분"
+                f"점심: {meal_time.dinner.start_hours}시 {str(meal_time.dinner.start_minutes).zfill(2)}분"
+                f" ~ {meal_time.dinner.end_hours}시 {str(meal_time.dinner.end_minutes).zfill(2)}분"
             )
         elif now_time > self.meal_time_safe(meal_time, "dinner"):
             return "운영 종료"

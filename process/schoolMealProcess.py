@@ -71,10 +71,22 @@ class SchoolMealProcess(MealTimeProcess):
             color=self.color,
         )
 
+        unknown_restaurant_count = 0
         for restaurant_name, meal_data in data.items():
             if getattr(meal_data, meal_type, None) is None:
+                # embed.add_field(name=restaurant_name, value="알 수 없음.", inline=True)
+                unknown_restaurant_count += 1
                 continue
             embed.add_field(name=restaurant_name, value="\n".join(getattr(meal_data, meal_type)), inline=True)
+
+        if (
+                self._optional_safe(meal_time, "breakfast", None) is None and
+                self._optional_safe(meal_time, "lunch", None) is None and
+                self._optional_safe(meal_time, "dinner", None) is None
+        ):
+            embed.description += "\n\n해당 일자에는 학생 식당을 운영하지 않습니다."
+        elif len(data) == unknown_restaurant_count:
+            embed.description += "\n\n해당 일자의 식단 정보가 존재하지 않습니다."
 
         self.init_button()
         if self._optional_safe(meal_time, "breakfast", None) is None:
