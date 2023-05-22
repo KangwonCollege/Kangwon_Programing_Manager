@@ -20,7 +20,7 @@ class Meal:
     @interaction.option(name="건물", choices=[
         interaction.CommandOptionChoice("새롬관", "새롬관"),
         interaction.CommandOptionChoice("이룸관", "이룸관"),
-    ])
+    ], description='기숙사 식당 식단표를 불러올 식당을 선택해주세요.')
     async def dormitory_meal(self, ctx: interaction.ApplicationContext, building: str):
         await ctx.defer()
         client = DormitoryMealProcess(
@@ -40,7 +40,7 @@ class Meal:
         interaction.CommandOptionChoice("천지관", "CC10"),
         interaction.CommandOptionChoice("백록관", "CC20"),
         interaction.CommandOptionChoice("두리관", "CC30"),
-    ])
+    ], description='학생 식당 식단표를 불러올 식당을 선택해주세요.')
     async def student_meal(self, ctx: interaction.ApplicationContext, building: str):
         await ctx.defer()
         client = SchoolMealProcess(
