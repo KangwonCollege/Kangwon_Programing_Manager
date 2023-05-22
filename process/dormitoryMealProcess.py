@@ -84,5 +84,6 @@ class DormitoryMealProcess(MealTimeProcess):
         embed.set_footer(text=self.meal_footer(meal_time))
 
         component = await self.request_component(component_context, embeds=[embed])
-        await self.response_component(component, date, building, **kwargs)
+        if component is not None:
+            await self.response_component(component, date, building, **kwargs)
         return

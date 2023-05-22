@@ -114,5 +114,6 @@ class SchoolMealProcess(MealTimeProcess):
             self.dinner_button.disabled = True
 
         component = await self.request_component(component_context, embeds=[embed])
-        await self.response_component(component, date, building, meal_type=meal_type, **kwargs)
+        if component is not None:
+            await self.response_component(component, date, building, meal_type=meal_type, **kwargs)
         return

@@ -1,3 +1,4 @@
+import copy
 import datetime
 from abc import ABCMeta
 from abc import abstractmethod
@@ -64,6 +65,28 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                 component.custom_id in [
                     t.custom_id for t in (self.buttons.components + self.building_selection.components)
                 ]
+        )
+
+    async def cancel_component(
+            self,
+            component_context: interaction.ComponentsContext | None = None,
+            content: str = None,
+            embeds: list[discord.Embed] = discord.utils.MISSING,
+            attachments: list[discord.File] = discord.utils.MISSING,
+            components: list[interaction.ActionRow] = None,
+            **kwargs
+    ):
+        _components = [copy.copy(self.building_selection)]
+        for index, _ in enumerate(self.building_selection.components):
+            _components[0].components[index].disabled = True
+
+        return await super(ProcessBase, self).cancel_component(
+            component_context,
+            content,
+            embeds,
+            attachments,
+            _components,
+            **kwargs
         )
 
     async def request_component(
