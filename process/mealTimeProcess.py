@@ -109,7 +109,7 @@ class MealTimeProcess(ProcessBase, metaclass=ABCMeta):
             )
         elif now_time <= self.meal_time_safe(meal_time, "dinner"):
             return (
-                f"점심: {meal_time.dinner.start_hours}시 {str(meal_time.dinner.start_minutes).zfill(2)}분"
+                f"저녁: {meal_time.dinner.start_hours}시 {str(meal_time.dinner.start_minutes).zfill(2)}분"
                 f" ~ {meal_time.dinner.end_hours}시 {str(meal_time.dinner.end_minutes).zfill(2)}분"
             )
         elif now_time > self.meal_time_safe(meal_time, "dinner"):
