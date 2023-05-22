@@ -35,6 +35,7 @@ class Meal:
             client=self.client,
             school_process=SchoolMealProcess(ctx, self.client)
         )
+        client.school_process.dormitory_process = client
         await client.content(
             date=datetime.date.today(),
             building=building
