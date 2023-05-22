@@ -91,7 +91,13 @@ class MealTimeProcess(ProcessBase, metaclass=ABCMeta):
             meal_time = self.meal_time_now
 
         now_time = datetime.datetime.now().time()
-        if now_time <= self.meal_time_safe(meal_time, "breakfast"):  # meal.breakfast will not None
+        if (
+                self._optional_safe(meal_time, "breakfast", None) is None and
+                self._optional_safe(meal_time, "lunch", None) is None and
+                self._optional_safe(meal_time, "dinner", None) is None
+        ):
+            return "미운영"
+        elif now_time <= self.meal_time_safe(meal_time, "breakfast"):  # meal.breakfast will not None
             return (
                 f"아침: {meal_time.breakfast.start_hours}시 {meal_time.breakfast.start_minutes}분"
                 f" ~ {meal_time.breakfast.end_hours}시 {meal_time.breakfast.end_minutes}분"
