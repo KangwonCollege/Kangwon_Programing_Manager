@@ -52,7 +52,9 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                     interaction.Options(label="천지관", value=SchoolMealType.CheonJi.value),
                     interaction.Options(label="백록관", value=SchoolMealType.BaekNok.value),
                     interaction.Options(label="두리관", value=SchoolMealType.Duri.value),
-                ]
+                ],
+                min_values=1,
+                max_values=1
             )
         ])
 
