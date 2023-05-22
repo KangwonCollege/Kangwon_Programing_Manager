@@ -16,7 +16,7 @@ class Meal:
     def __init__(self, client: discord.Client):
         self.client = client
 
-    @interaction.command(name="긱식")
+    @interaction.command(name="긱식", description="기숙사 식당의 식단표를 불러옵니다.")
     @interaction.option(name="건물", choices=[
         interaction.CommandOptionChoice("새롬관", "새롬관"),
         interaction.CommandOptionChoice("이룸관", "이룸관"),
@@ -35,7 +35,7 @@ class Meal:
         )
         return
 
-    @interaction.command(name="학식")
+    @interaction.command(name="학식", description="학생 식당의 식단표를 불러옵니다.")
     @interaction.option(name="건물", choices=[
         interaction.CommandOptionChoice("천지관", "CC10"),
         interaction.CommandOptionChoice("백록관", "CC20"),
