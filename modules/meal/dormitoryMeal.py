@@ -86,6 +86,12 @@ class DormitoryMeal(BaseMeal):
                     meal_info_day_and_type = meal_info_day.text.replace('\t', '')
 
                     meal_info_day_and_type = meal_info_day_and_type.strip('\n')
+                    if meal_info_day_and_type == '':
+                        # setattr(
+                        #     getattr(self.data[meal_date], key),
+                        #     meal_type, None
+                        # )
+                        continue
                     setattr(
                         getattr(self.data[meal_date], key),
                         meal_type, meal_info_day_and_type.split('\n')

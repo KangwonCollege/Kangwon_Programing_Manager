@@ -36,6 +36,14 @@ class DormitoryMealProcess(MealTimeProcess):
         self.error_color = int(parser.get("Color", "error"), 16)
         self.warning_color = int(parser.get("Color", "warning"), 16)
 
+    @staticmethod
+    def add_field_meal_info(meal_info: list[str] | None, meal_type: str, embed: discord.Embed) -> discord.Embed:
+        if meal_info is not None:
+            embed.add_field(name=meal_type, value="\n".join(meal_info), inline=True)
+        else:
+            embed.add_field(name=meal_type, value="정보 없음.", inline=True)
+        return embed
+
     async def content(
             self,
             date: datetime.date,
@@ -56,9 +64,12 @@ class DormitoryMealProcess(MealTimeProcess):
             color=self.color,
         )
 
-        embed.add_field(name="아침", value="\n".join(meal_info.breakfast), inline=True)
-        embed.add_field(name="점심", value="\n".join(meal_info.lunch), inline=True)
-        embed.add_field(name="저녁", value="\n".join(meal_info.dinner), inline=True)
+        if meal_info.breakfast is None and meal_info.lunch is None and meal_info.dinner is None:
+            embed.description += "\n\n해당 일자의 식단 정보가 존재하지 않습니다."
+        else:
+            embed = self.add_field_meal_info(meal_info.breakfast, "아침", embed)
+            embed = self.add_field_meal_info(meal_info.breakfast, "점심", embed)
+            embed = self.add_field_meal_info(meal_info.breakfast, "저녁", embed)
 
         self.init_button()
         self.breakfast_button.style = 2
