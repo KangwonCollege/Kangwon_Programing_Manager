@@ -68,8 +68,8 @@ class DormitoryMealProcess(MealTimeProcess):
             embed.description += "\n\n해당 일자의 식단 정보가 존재하지 않습니다."
         else:
             embed = self.add_field_meal_info(meal_info.breakfast, "아침", embed)
-            embed = self.add_field_meal_info(meal_info.breakfast, "점심", embed)
-            embed = self.add_field_meal_info(meal_info.breakfast, "저녁", embed)
+            embed = self.add_field_meal_info(meal_info.lunch, "점심", embed)
+            embed = self.add_field_meal_info(meal_info.dinner, "저녁", embed)
 
         self.init_button()
         self.breakfast_button.style = 2
