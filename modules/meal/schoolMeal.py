@@ -11,7 +11,7 @@ from utils.weekday import weekday
 
 class SchoolMeal(BaseMeal):
     def __init__(self, loop: asyncio.AbstractEventLoop):
-        super(SchoolMeal, self).__init__(loop)
+        super(SchoolMeal, self).__init__(loop=loop)
 
         self.data: dict[
             SchoolMealType,
@@ -68,7 +68,7 @@ class SchoolMeal(BaseMeal):
                 meal_date = weekday_response.Monday + datetime.timedelta(days=index)
                 self.data[building][meal_date] = {
                     restaurant_name: MealResponse()
-                    for restaurant_name in restaurant_name_list.items()
+                    for restaurant_name in restaurant_name_list[building]
                 }
             return self.data
 
@@ -86,7 +86,7 @@ class SchoolMeal(BaseMeal):
                 restaurant_name = restaurant_name_tag.text
                 restaurant_name_max_key = index + int(restaurant_name_tag.get("rowspan", 1))
             meal_type = value.find('th', {"rowspan": None}).text
-            for j, meal_info in enumerate(tbody.find_all("td")):
+            for j, meal_info in enumerate(value.find_all("td")):
                 meal_date = weekday_response.Monday + datetime.timedelta(days=j)
                 if meal_date not in self.data[building]:
                     self.data[building][meal_date] = dict()
@@ -105,5 +105,5 @@ class SchoolMeal(BaseMeal):
             meal_date = weekday_response.Sunday + datetime.timedelta(days=-(1 - index))
             self.data[building][meal_date] = {
                 restaurant_name: MealResponse()
-                for restaurant_name in restaurant_name_list.items()
+                for restaurant_name in restaurant_name_list[building]
             }

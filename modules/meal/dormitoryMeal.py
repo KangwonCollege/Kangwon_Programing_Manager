@@ -12,9 +12,7 @@ from utils.weekday import weekday
 
 class DormitoryMeal(BaseMeal):
     def __init__(self, loop: asyncio.AbstractEventLoop):
-        super(DormitoryMeal, self).__init__(
-            loop, connector=aiohttp.TCPConnector(ssl=False)
-        )
+        super(DormitoryMeal, self).__init__(loop)
 
         self.data: dict[datetime.date, DormitoryResponse | None] = dict()
 
@@ -88,6 +86,12 @@ class DormitoryMeal(BaseMeal):
                     meal_info_day_and_type = meal_info_day.text.replace('\t', '')
 
                     meal_info_day_and_type = meal_info_day_and_type.strip('\n')
+                    if meal_info_day_and_type == '':
+                        # setattr(
+                        #     getattr(self.data[meal_date], key),
+                        #     meal_type, None
+                        # )
+                        continue
                     setattr(
                         getattr(self.data[meal_date], key),
                         meal_type, meal_info_day_and_type.split('\n')

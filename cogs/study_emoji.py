@@ -32,7 +32,7 @@ class StudyEmoji:
             member = await self.guild.fetch_member(payload.user_id)
 
         if channel_id == self.channel_id:
-            await thread.send(f"{member.mention}님이 온라인 스터디에 참여합니다!")
+            await thread.send(f"{member.mention}님이 그룹 스터디에 참여합니다!")
         return
 
     @interaction.listener()

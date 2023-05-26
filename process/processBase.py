@@ -1,20 +1,16 @@
+import copy
 import datetime
 from abc import ABCMeta
 from abc import abstractmethod
 
 import discord
 from discord.ext import interaction
-import os
-import json
 
-from modules.meal import SchoolMealType
-from process.responseBase import ResponseBase
 from modules.meal.dormitoryMeal import DormitoryMeal
 from modules.meal.schoolMeal import SchoolMeal
-from modules.mealTimeModel import Week
-from modules.mealTimeModel import OperatingTime
-from modules.mealTimeModel import MealType
-from utils.directory import directory
+from modules.meal.schoolMealType import SchoolMealType
+from process.responseBase import ResponseBase
+from utils.find_enum import find_enum
 
 
 class ProcessBase(ResponseBase, metaclass=ABCMeta):
@@ -43,18 +39,6 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
         if self.school_client is None:
             self.school_client = SchoolMeal(loop=self.client.loop)
 
-        with open(os.path.join(directory, "data", "meal_time.json")) as file:
-            self.meal_time_json = json.load(file)
-
-        self.meal_time = dict()
-        for key, value in self.meal_time_json.items():
-            self.meal_time[key] = Week(**{
-                week_key: MealType(**{
-                    operating_key: OperatingTime(**operating_value)
-                    for operating_key, operating_value in meal_type_info.items() if operating_value is not None
-                }) for week_key, meal_type_info in value.items() if meal_type_info is not None
-            })
-
         self.dormitory_process = kwargs.get('dormitory_process')
         self.school_process = kwargs.get('school_process')
 
@@ -69,7 +53,9 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                     interaction.Options(label="천지관", value=SchoolMealType.CheonJi.value),
                     interaction.Options(label="백록관", value=SchoolMealType.BaekNok.value),
                     interaction.Options(label="두리관", value=SchoolMealType.Duri.value),
-                ]
+                ],
+                min_values=1,
+                max_values=1
             )
         ])
 
@@ -79,6 +65,28 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                 component.custom_id in [
                     t.custom_id for t in (self.buttons.components + self.building_selection.components)
                 ]
+        )
+
+    async def cancel_component(
+            self,
+            component_context: interaction.ComponentsContext | None = None,
+            content: str = None,
+            embeds: list[discord.Embed] = discord.utils.MISSING,
+            attachments: list[discord.File] = discord.utils.MISSING,
+            components: list[interaction.ActionRow] = None,
+            **kwargs
+    ):
+        _components = [copy.copy(self.building_selection)]
+        for index, _ in enumerate(self.building_selection.components):
+            _components[0].components[index].disabled = True
+
+        return await super(ProcessBase, self).cancel_component(
+            component_context,
+            content,
+            embeds,
+            attachments,
+            _components,
+            **kwargs
         )
 
     async def request_component(
@@ -145,7 +153,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
     async def content(
             self,
             date: datetime.date,
-            building: str,
+            building: str | SchoolMealType,
             component_context: interaction.ComponentsContext = None,
             **kwargs
     ):
@@ -155,7 +163,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
             self,
             component: interaction.ComponentsContext,
             date: datetime.date,
-            building: str,
+            building: str | SchoolMealType,
             **kwargs
     ):
         if component.custom_id in [
@@ -173,9 +181,10 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                 SchoolMealType.BaekNok.value,
                 SchoolMealType.Duri.value
             ]:
+                _building = find_enum(SchoolMealType, component.values[0])
                 return await self.school_process.content(
                     date=date,
-                    building=building,
+                    building=_building,
                     component_context=component,
                     **kwargs
                 )
@@ -196,6 +205,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                 **kwargs
             )
         elif component.custom_id == self.breakfast_button.custom_id:
+            kwargs.pop('meal_type')
             return await self.content(
                 date=date,
                 building=building,
@@ -204,6 +214,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                 **kwargs
             )
         elif component.custom_id == self.lunch_button.custom_id:
+            kwargs.pop('meal_type')
             return await self.content(
                 date=date,
                 building=building,
@@ -212,6 +223,7 @@ class ProcessBase(ResponseBase, metaclass=ABCMeta):
                 **kwargs
             )
         elif component.custom_id == self.dinner_button.custom_id:
+            kwargs.pop('meal_type')
             return await self.content(
                 date=date,
                 building=building,

@@ -49,7 +49,11 @@ class Requests:
 
         if session is None:
             single_session = True
-            session = aiohttp.ClientSession(loop=self.loop, **self.session_option)
+            session = aiohttp.ClientSession(
+                loop=self.loop,
+                connector=aiohttp.TCPConnector(ssl=False),
+                **self.session_option
+            )
 
         async with session.request(method, url, **kwargs) as response:
             data = await self.divide_content(response)
