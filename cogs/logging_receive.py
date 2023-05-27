@@ -297,6 +297,7 @@ class LoggingReceive:
 
         embed = copy.copy(self.embed)
         embed.title = embed.title.format("메시지 수정")
+        self.embed__time(embed, before_message.created_at, after_message.edited_at)
         embed.add_field(name="메시지 위치", value="[링크]({0})".format(after_message.jump_url), inline=False)
         self.embed__author(embed, before_message.author)
 
@@ -335,8 +336,6 @@ class LoggingReceive:
                 embed, False
             )
             self.multi_items_before_and_after(before_stickers_field, after_stickers_field, "스티커", embed)
-
-        self.embed__time(embed, before_message.created_at, after_message.edited_at)
         await self.edited_logging_channel_sendable.send(embed=embed)
         return
 
