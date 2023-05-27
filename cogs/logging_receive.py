@@ -294,6 +294,7 @@ class LoggingReceive:
 
         embed = copy.copy(self.embed)
         embed.title = embed.title.format("메시지 수정")
+        embed.add_field(name="메시지 위치", value="[링크]({0})".format(after_message.jump_url), inline=False)
         self.embed__author(embed, before_message.author)
 
         if before_message.content is not None:
@@ -302,10 +303,9 @@ class LoggingReceive:
             embed.add_field(name="원본 내용", value="내용 없음.", inline=False)
 
         if after_message.content is not None:
-            embed.add_field(name="수정 내용", value=self.embed__content(before_message.content), inline=True)
+            embed.add_field(name="수정 내용", value=self.embed__content(after_message.content), inline=True)
         else:
             embed.add_field(name="원본 내용", value="내용 삭제됨.", inline=False)
-        embed.add_field(name="메시지 위치", value="[링크]({0})".format(after_message.jump_url), inline=True)
 
         if len(before_message.attachments) > 0 or len(before_message.attachments) > 0:
             before_attachment_field = self.multi_items_with_image(
