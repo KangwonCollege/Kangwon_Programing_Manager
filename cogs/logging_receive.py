@@ -203,7 +203,8 @@ class LoggingReceive:
     async def on_message_delete(self, message: discord.Message):
         if (
                 message.channel.id == self.deleted_logging_channel_id or
-                message.channel.id == self.edited_logging_channel_id
+                message.channel.id == self.edited_logging_channel_id or
+                message.guild.id != self.guild_id
         ):
             return
         await self.deleted_message_item(message, None)
@@ -216,7 +217,8 @@ class LoggingReceive:
 
         if (
                 messages[0].channel.id == self.deleted_logging_channel_id or
-                messages[0].channel.id == self.edited_logging_channel_id
+                messages[0].channel.id == self.edited_logging_channel_id or
+                messages[0].guild.id != self.guild_id
         ):
             return
 
@@ -288,7 +290,8 @@ class LoggingReceive:
 
         if (
                 before_message.channel.id == self.deleted_logging_channel_id or
-                before_message.channel.id == self.edited_logging_channel_id
+                before_message.channel.id == self.edited_logging_channel_id or
+                before_message.guild.id != self.guild_id
         ):
             return
 
