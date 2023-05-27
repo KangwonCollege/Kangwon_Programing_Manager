@@ -96,6 +96,10 @@ class LoggingReceive:
         embed.add_field(name="사용자", value="{0}({1})".format(author.mention, author.id), inline=False)
 
     @staticmethod
+    def embed__channel(embed: discord.Embed, channel: discord.abc.GuildChannel):
+        embed.add_field(name="채널", value="{0}({1})".format(channel.mention, channel.id), inline=False)
+
+    @staticmethod
     def embed__content(content: str):
         # Embed field.value limits is 1024 characters.
         # But, Message Content can be over 1024 characters. (If user have nitro, it will be 4000 characters.)
@@ -115,6 +119,7 @@ class LoggingReceive:
         embed = copy.copy(self.embed)
         embed.title = embed.title.format("메시지 삭제")
         self.embed__author(embed, message.author)
+        self.embed__channel(embed, message.channel)
 
         if message.content is not None:
             embed.add_field(name="내용", value=self.embed__content(message.content), inline=False)
@@ -183,6 +188,7 @@ class LoggingReceive:
                 author_list_comment += f" 외 {len(author_fields) - index}명"
                 break
             author_list_comment += ", " + author_message
+        self.embed__channel(embed, messages[0].channel)
 
         embed.add_field(
             name="삭제된 메시지 (봇 / 사용자)",
@@ -298,18 +304,26 @@ class LoggingReceive:
         embed = copy.copy(self.embed)
         embed.title = embed.title.format("메시지 수정")
         self.embed__time(embed, before_message.created_at, after_message.edited_at)
-        embed.add_field(name="메시지 위치", value="[링크]({0})".format(after_message.jump_url), inline=False)
+        embed.add_field(name="메시지 위치", value="[링크]({0})".format(after_message.jump_url), inline=True)
         self.embed__author(embed, before_message.author)
+        self.embed__channel(embed, before_message.channel)
 
-        if before_message.content is not None:
-            embed.add_field(name="원본 내용", value=self.embed__content(before_message.content), inline=True)
-        else:
-            embed.add_field(name="원본 내용", value="내용 없음.", inline=False)
+        if before_message.content != after_message.content:
+            if before_message.content is not None:
+                embed.add_field(name="원본 내용", value=self.embed__content(before_message.content), inline=True)
+            else:
+                embed.add_field(name="원본 내용", value="내용 없음.", inline=False)
 
-        if after_message.content is not None:
-            embed.add_field(name="수정 내용", value=self.embed__content(after_message.content), inline=True)
+            if after_message.content is not None:
+                embed.add_field(name="수정 내용", value=self.embed__content(after_message.content), inline=True)
+            else:
+                embed.add_field(name="원본 내용", value="내용 삭제됨.", inline=False)
         else:
-            embed.add_field(name="원본 내용", value="내용 삭제됨.", inline=False)
+            embed.add_field(name="내용", value=after_message.content, inline=False)
+
+        # User can't create embed.
+        if len(before_message.embeds) <= 0 and len(after_message.embeds) > 1:
+            return
 
         if len(before_message.attachments) > 0 or len(before_message.attachments) > 0:
             before_attachment_field = self.multi_items_with_image(
