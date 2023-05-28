@@ -80,13 +80,13 @@ class LoggingReceive:
             item_format: Callable[[UrlSupport], str],
             embed: discord.Embed,
             image_mode: bool = True
-    ) -> str:
+    ) -> list[str]:
         field = []
         for obj in objs:
             field.append(item_format(obj))
             if embed.image.url is None and image_mode:
                 embed.set_image(url=obj.url)
-        return " ".join(field)
+        return field
 
     @staticmethod
     def embed__author(embed: discord.Embed, author: discord.User | discord.Member):
@@ -129,8 +129,6 @@ class LoggingReceive:
             lambda attachment: self.attachment_name(attachment),
             embed
         )
-        if len(attachment_field) > 0:
-            embed.add_field(name="파일", value=" ".join(attachment_field), inline=False)
 
         stickers_field = self.multi_items_with_image(
             message.stickers,
@@ -262,7 +260,7 @@ class LoggingReceive:
         return
 
     @staticmethod
-    def multi_items_before_and_after(before_field: str, after_field: str, title: str, embed: discord.Embed):
+    def multi_items_before_and_after(before_field: list[str], after_field: list[str], title: str, embed: discord.Embed):
         if len(before_field) <= 0:
             embed.add_field(
                 name=title,
